@@ -1,0 +1,82 @@
+{
+  "name": "DriverProfile",
+  "type": "object",
+  "properties": {
+    "user_id": {
+      "type": "string"
+    },
+    "email": {
+      "type": "string",
+      "description": "Driver's login email, set by admin"
+    },
+    "full_name": {
+      "type": "string"
+    },
+    "phone": {
+      "type": "string"
+    },
+    "vehicle_make": {
+      "type": "string"
+    },
+    "vehicle_model": {
+      "type": "string"
+    },
+    "vehicle_color": {
+      "type": "string"
+    },
+    "license_plate": {
+      "type": "string"
+    },
+    "vehicle_type": {
+      "type": "string",
+      "enum": [
+        "economy",
+        "comfort",
+        "premium"
+      ],
+      "default": "economy"
+    },
+    "is_online": {
+      "type": "boolean",
+      "default": false
+    },
+    "current_lat": {
+      "type": "number"
+    },
+    "current_lng": {
+      "type": "number"
+    },
+    "total_rides": {
+      "type": "number",
+      "default": 0
+    },
+    "average_rating": {
+      "type": "number",
+      "default": 5
+    },
+    "profile_image": {
+      "type": "string",
+      "format": "uri"
+    },
+    "license_url": {
+      "type": "string",
+      "description": "Driver's license document URL"
+    },
+    "insurance_url": {
+      "type": "string",
+      "description": "Vehicle insurance document URL"
+    },
+    "documents_verified": {
+      "type": "boolean",
+      "default": false,
+      "description": "Admin has verified the uploaded documents"
+    }
+  },
+  "required": [
+    "user_id",
+    "full_name",
+    "vehicle_make",
+    "vehicle_model",
+    "license_plate"
+  ]
+}

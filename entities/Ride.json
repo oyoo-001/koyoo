@@ -1,0 +1,141 @@
+{
+  "name": "Ride",
+  "type": "object",
+  "properties": {
+    "rider_id": {
+      "type": "string",
+      "description": "User ID of the rider"
+    },
+    "rider_name": {
+      "type": "string"
+    },
+    "rider_email": {
+      "type": "string",
+      "description": "Rider's email for receipts"
+    },
+    "driver_id": {
+      "type": "string",
+      "description": "User ID of the driver"
+    },
+    "driver_name": {
+      "type": "string"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "requested",
+        "accepted",
+        "in_progress",
+        "completed",
+        "cancelled"
+      ],
+      "default": "requested"
+    },
+    "pickup_address": {
+      "type": "string"
+    },
+    "pickup_lat": {
+      "type": "number"
+    },
+    "pickup_lng": {
+      "type": "number"
+    },
+    "destination_address": {
+      "type": "string"
+    },
+    "destination_lat": {
+      "type": "number"
+    },
+    "destination_lng": {
+      "type": "number"
+    },
+    "estimated_fare": {
+      "type": "number"
+    },
+    "final_fare": {
+      "type": "number"
+    },
+    "surge_multiplier": {
+      "type": "number",
+      "default": 1
+    },
+    "distance_km": {
+      "type": "number"
+    },
+    "duration_min": {
+      "type": "number"
+    },
+    "rider_rating": {
+      "type": "number",
+      "minimum": 1,
+      "maximum": 5
+    },
+    "driver_rating": {
+      "type": "number",
+      "minimum": 1,
+      "maximum": 5
+    },
+    "rider_comment": {
+      "type": "string",
+      "description": "Rider's comment about the driver"
+    },
+    "driver_comment": {
+      "type": "string",
+      "description": "Driver's comment about the rider"
+    },
+    "vehicle_type": {
+      "type": "string",
+      "enum": [
+        "motorbike",
+        "tuktuk",
+        "standard",
+        "luxury"
+      ],
+      "default": "standard"
+    },
+    "payment_method": {
+      "type": "string",
+      "enum": [
+        "cash",
+        "card"
+      ],
+      "default": "cash"
+    },
+    "payment_status": {
+      "type": "string",
+      "enum": [
+        "pending",
+        "paid",
+        "failed"
+      ],
+      "default": "pending"
+    },
+    "paystack_reference": {
+      "type": "string",
+      "description": "Paystack transaction reference"
+    },
+    "call_active": {
+      "type": "boolean",
+      "default": false
+    },
+    "call_offer": {
+      "type": "string"
+    },
+    "call_answer": {
+      "type": "string"
+    },
+    "call_ice_candidates": {
+      "type": "string",
+      "description": "JSON stringified array of ICE candidates"
+    }
+  },
+  "required": [
+    "rider_id",
+    "pickup_address",
+    "pickup_lat",
+    "pickup_lng",
+    "destination_address",
+    "destination_lat",
+    "destination_lng"
+  ]
+}

@@ -1,0 +1,10 @@
+{
+  "appId": "com.koyoo.taxi",
+  "appName": "KoyooTaxi",
+  "webDir": "dist",
+  "bundledWebRuntime": false,
+  "server": {
+    "androidScheme": "https",
+    "cleartext": true
+  }
+}

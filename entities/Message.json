@@ -1,0 +1,39 @@
+{
+  "name": "Message",
+  "type": "object",
+  "properties": {
+    "ride_id": {
+      "type": "string",
+      "description": "Associated ride"
+    },
+    "sender_id": {
+      "type": "string"
+    },
+    "sender_name": {
+      "type": "string"
+    },
+    "sender_role": {
+      "type": "string",
+      "enum": [
+        "rider",
+        "driver"
+      ]
+    },
+    "content": {
+      "type": "string"
+    },
+    "type": {
+      "type": "string",
+      "enum": [
+        "text",
+        "image"
+      ],
+      "default": "text"
+    }
+  },
+  "required": [
+    "ride_id",
+    "sender_id",
+    "content"
+  ]
+}

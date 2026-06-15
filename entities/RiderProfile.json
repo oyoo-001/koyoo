@@ -1,0 +1,39 @@
+{
+  "name": "RiderProfile",
+  "type": "object",
+  "properties": {
+    "user_id": {
+      "type": "string"
+    },
+    "full_name": {
+      "type": "string"
+    },
+    "phone": {
+      "type": "string"
+    },
+    "default_payment": {
+      "type": "string",
+      "enum": [
+        "cash",
+        "card"
+      ],
+      "default": "cash"
+    },
+    "total_rides": {
+      "type": "number",
+      "default": 0
+    },
+    "average_rating": {
+      "type": "number",
+      "default": 5
+    },
+    "profile_image": {
+      "type": "string",
+      "format": "uri"
+    }
+  },
+  "required": [
+    "user_id",
+    "full_name"
+  ]
+}
