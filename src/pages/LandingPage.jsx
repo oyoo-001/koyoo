@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -24,8 +24,10 @@ import {
   Phone,
   Mail,
   Navigation,
+  X,
+  Megaphone,
 } from "lucide-react";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 
 const fadeUp = {
   initial: { y: 30, opacity: 0 },
@@ -46,12 +48,32 @@ export default function LandingPage() {
   const [appEmail, setAppEmail] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [activeAds, setActiveAds] = useState([]);
+  const [showAdPopup, setShowAdPopup] = useState(false);
+  const adPopupDismissed = useRef(false);
 
   useEffect(() => {
     api.entities.Ad.getActive()
-      .then(setActiveAds)
+      .then((ads) => {
+        setActiveAds(ads);
+        const popupAd = ads.find((a) => a.position === "popup") || ads[0];
+        if (popupAd && !adPopupDismissed.current) {
+          const timer = setTimeout(() => {
+            setShowAdPopup(true);
+          }, 3000);
+          return () => clearTimeout(timer);
+        }
+      })
       .catch(() => {});
   }, []);
+
+  const popupAd = (showAdPopup && activeAds.length > 0)
+    ? (activeAds.find((a) => a.position === "popup") || activeAds[0])
+    : null;
+
+  const dismissPopup = () => {
+    setShowAdPopup(false);
+    adPopupDismissed.current = true;
+  };
 
   const handleDriverApply = async (e) => {
     e.preventDefault();
@@ -78,6 +100,7 @@ export default function LandingPage() {
   };
 
   return (
+    <>
     <div className="min-h-screen text-foreground overflow-x-hidden">
       {/* ─── Top Nav ─── */}
       <header className="fixed top-0 left-0 right-0 z-50 bg-background/90 backdrop-blur-xl border-b border-border">
@@ -294,47 +317,59 @@ export default function LandingPage() {
       </section>
 
       {/* ─── Advert Banners ─── */}
-      {activeAds.length > 0 && (
+      {activeAds.filter((a) => a.position === "banner" || !a.position).length > 0 && (
         <section className="py-10">
-          <div className="max-w-6xl mx-auto px-4 space-y-4">
-            {activeAds.map((ad, i) => (
+          <div className="max-w-6xl mx-auto px-4 space-y-6">
+            <div className="flex items-center gap-2">
+              <Megaphone size={16} className="text-primary" />
+              <span className="text-[10px] font-semibold text-primary uppercase tracking-widest">Promotions</span>
+            </div>
+            {activeAds.filter((a) => a.position === "banner" || !a.position).map((ad, i) => (
               <motion.div
                 key={ad.id}
-                className="bg-gradient-to-r from-primary/20 via-primary/10 to-secondary border border-border rounded-3xl p-8 md:p-12 flex flex-col md:flex-row items-center justify-between gap-6"
+                className="bg-gradient-to-r from-primary/20 via-primary/5 to-secondary border border-border rounded-3xl overflow-hidden"
                 {...fadeUp}
               >
-                <div className="flex items-center gap-4">
-                  {ad.image_url && (
+                {ad.image_url ? (
+                  <div className="relative">
                     <img
                       src={ad.image_url}
                       alt={ad.title}
-                      className="w-16 h-16 md:w-20 md:h-20 rounded-2xl object-cover shrink-0"
+                      className="w-full h-48 md:h-64 object-cover"
                     />
-                  )}
-                  <div>
-                    <p className="text-xs font-semibold text-primary uppercase tracking-widest mb-1">
-                      {i === 0 ? "Sponsored" : "Advertisement"}
-                    </p>
-                    <h3 className="text-xl md:text-2xl font-heading font-bold">
-                      {ad.title}
-                    </h3>
-                    {ad.description && (
-                      <p className="text-sm text-muted-foreground mt-1">
-                        {ad.description}
-                      </p>
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
+                    <div className="absolute bottom-0 left-0 right-0 p-6 md:p-8">
+                      <span className="text-[10px] font-semibold text-primary uppercase tracking-widest bg-background/80 px-2 py-0.5 rounded-full">
+                        Sponsored
+                      </span>
+                      <h3 className="text-xl md:text-2xl font-heading font-bold text-white mt-2">
+                        {ad.title}
+                      </h3>
+                      {ad.description && (
+                        <p className="text-sm text-white/80 mt-1 max-w-lg">{ad.description}</p>
+                      )}
+                      {ad.link_url && (
+                        <a href={ad.link_url} target="_blank" rel="noopener noreferrer" className="inline-block mt-3">
+                          <Button className="rounded-xl gap-2" size="sm">
+                            Learn More <ArrowRight size={14} />
+                          </Button>
+                        </a>
+                      )}
+                    </div>
+                  </div>
+                ) : (
+                  <div className="p-6 md:p-8 flex flex-col md:flex-row items-center justify-between gap-6">
+                    <div>
+                      <span className="text-[10px] font-semibold text-primary uppercase tracking-widest">Sponsored</span>
+                      <h3 className="text-xl md:text-2xl font-heading font-bold mt-1">{ad.title}</h3>
+                      {ad.description && <p className="text-sm text-muted-foreground mt-1">{ad.description}</p>}
+                    </div>
+                    {ad.link_url && (
+                      <a href={ad.link_url} target="_blank" rel="noopener noreferrer">
+                        <Button className="rounded-xl gap-2 shrink-0">Learn More <ArrowRight size={14} /></Button>
+                      </a>
                     )}
                   </div>
-                </div>
-                {ad.link_url && (
-                  <a
-                    href={ad.link_url}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                  >
-                    <Button className="rounded-2xl shrink-0 gap-2" size="lg">
-                      Learn More <ArrowRight size={16} />
-                    </Button>
-                  </a>
                 )}
               </motion.div>
             ))}
@@ -598,5 +633,56 @@ export default function LandingPage() {
         </div>
       </footer>
     </div>
+
+    {/* ─── Ad Popup ─── */}
+    <AnimatePresence>
+      {popupAd && (
+        <motion.div
+          key="ad-popup"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4"
+          onClick={dismissPopup}
+        >
+          <motion.div
+            initial={{ scale: 0.9, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            exit={{ scale: 0.9, opacity: 0 }}
+            className="bg-card border border-border rounded-3xl overflow-hidden max-w-sm w-full shadow-2xl"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {popupAd.image_url && (
+              <div className="relative h-48 bg-secondary/50">
+                <img src={popupAd.image_url} alt={popupAd.title} className="w-full h-full object-cover" />
+              </div>
+            )}
+            <div className="p-6 space-y-3">
+              <div className="flex items-center gap-2">
+                <Megaphone size={14} className="text-primary" />
+                <span className="text-[10px] font-semibold text-primary uppercase tracking-widest">Sponsored</span>
+              </div>
+              <h3 className="text-lg font-heading font-bold">{popupAd.title}</h3>
+              {popupAd.description && (
+                <p className="text-sm text-muted-foreground">{popupAd.description}</p>
+              )}
+              <div className="flex gap-2 pt-2">
+                {popupAd.link_url && (
+                  <a href={popupAd.link_url} target="_blank" rel="noopener noreferrer" className="flex-1">
+                    <Button className="w-full rounded-xl gap-2">
+                      Learn More <ArrowRight size={14} />
+                    </Button>
+                  </a>
+                )}
+                <Button variant="outline" className="rounded-xl shrink-0" onClick={dismissPopup}>
+                  <X size={16} />
+                </Button>
+              </div>
+            </div>
+          </motion.div>
+        </motion.div>
+      )}
+    </AnimatePresence>
+    </>
   );
 }

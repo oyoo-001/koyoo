@@ -1,9 +1,10 @@
 {
   "appId": "com.koyoo.taxi",
-  "appName": "KoyooTaxi",
+  "appName": "Koyoo Taxi",
   "webDir": "dist",
   "bundledWebRuntime": false,
   "server": {
+    "url": "https://philologic-debi-unsophisticatedly.ngrok-free.dev",
     "androidScheme": "https",
     "cleartext": true
   }

@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useRef } from "react";
-import { MapContainer, TileLayer, Marker, Popup, Polyline, useMap } from "react-leaflet";
+import { MapContainer, TileLayer, Marker, Popup, Polyline, useMap, ZoomControl } from "react-leaflet";
 import L from "leaflet";
 
 const PICKUP_SVG = `<svg width="28" height="28" viewBox="0 0 28 28"><circle cx="14" cy="14" r="13" fill="#22c55e" stroke="white" stroke-width="3"/><circle cx="14" cy="14" r="5" fill="white"/></svg>`;
@@ -179,13 +179,7 @@ function FitBounds({ pickup, destination, center, routeOrigin }) {
     } else if (pickup) {
       map.setView(pickup, 17);
     } else if (center) {
-      map.setView(center, 17);
-    } else {
-      const bounds = L.latLngBounds(
-        [-1.45, 36.6],
-        [-0.3, 37.6]
-      );
-      map.fitBounds(bounds, { padding: [30, 30] });
+      map.setView(center, 14);
     }
   }, [pickup, destination, center, map]);
   return null;
@@ -260,13 +254,10 @@ export default function RideMap({
     <div className={`w-full h-full rounded-xl overflow-hidden ${className}`}>
       <MapContainer
         center={defaultCenter}
-        zoom={15}
-        minZoom={12}
+        zoom={10}
         maxZoom={19}
         style={{ width: "100%", height: "100%" }}
         zoomControl={false}
-        maxBounds={[[-1.5, 36.5], [-0.2, 37.7]]}
-        maxBoundsViscosity={1.0}
       >
         <TileLayer
           attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors, &copy; <a href="https://carto.com/">CARTO</a>'
@@ -274,6 +265,7 @@ export default function RideMap({
           subdomains="abcd"
           maxZoom={19}
         />
+        <ZoomControl position="topright" />
         <ServiceAreaLayer />
         <MapClickHandler onClick={onClick} />
         <FitBounds pickup={pickup} destination={destination} center={userLocation} routeOrigin={routeOrigin} />

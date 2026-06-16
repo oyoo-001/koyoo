@@ -67,13 +67,23 @@ export default function RoleSelect() {
           return;
         }
 
+        // Check for driver applications by email (pending or approved)
+        try {
+          const apps = await api.request(`/driver-applications?email=${encodeURIComponent(me.email)}`);
+          if (Array.isArray(apps) && apps.length > 0) {
+            setActiveMode("driver");
+            navigate("/driver", { replace: true });
+            return;
+          }
+        } catch {}
+
         // No profile found — create rider profile automatically
         await api.entities.RiderProfile.create({
           user_id: me.id,
           full_name: me.full_name || "Rider",
         });
         setActiveMode("rider");
-        navigate("/", { replace: true });
+        navigate("/ride", { replace: true });
       } catch {
         setLoading(false);
       }

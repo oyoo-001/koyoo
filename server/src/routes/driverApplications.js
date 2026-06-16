@@ -103,15 +103,20 @@ router.patch('/:id', async (req, res) => {
   }
 });
 
-// Admin: list all applications
+// Admin: list all applications (supports ?status= and ?email= filters)
 router.get('/', authenticate, async (req, res) => {
   try {
     const status = req.query.status || '';
-    let query = 'SELECT * FROM driver_applications';
+    const email = req.query.email || '';
+    let query = 'SELECT * FROM driver_applications WHERE 1=1';
     const values = [];
     if (status) {
-      query += ' WHERE status = ?';
+      query += ' AND status = ?';
       values.push(status);
+    }
+    if (email) {
+      query += ' AND email = ?';
+      values.push(email);
     }
     query += ' ORDER BY created_at DESC';
     const [apps] = await pool.query(query, values);

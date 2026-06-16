@@ -48,18 +48,26 @@ export function configurePassport() {
         // Parse state to get dynamic origin (supports ngrok)
         let frontendUrl = process.env.FRONTEND_URL || 'http://localhost:5173';
         let redirectPath = '/role-select';
+        let isCapacitor = false;
         const stateParam = req.query?.state;
         if (stateParam) {
           try {
             const parsed = JSON.parse(stateParam);
             if (parsed.origin) frontendUrl = parsed.origin;
             if (parsed.redirect) redirectPath = parsed.redirect;
+            if (parsed.capacitor) isCapacitor = true;
           } catch {
             // Fallback: treat as legacy redirect path
             redirectPath = stateParam;
           }
         }
-        const redirectUrl = `${frontendUrl}/login?access_token=${token}&redirect=${encodeURIComponent(redirectPath)}`;
+
+        let redirectUrl;
+        if (isCapacitor) {
+          redirectUrl = `koyoo://oauth/callback?access_token=${token}&redirect=${encodeURIComponent(redirectPath)}`;
+        } else {
+          redirectUrl = `${frontendUrl}/login?access_token=${token}&redirect=${encodeURIComponent(redirectPath)}`;
+        }
 
         done(null, { user, token, redirectUrl });
       } catch (error) {

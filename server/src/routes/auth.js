@@ -210,11 +210,12 @@ router.get('/google', (req, res, next) => {
     return res.status(501).json({ message: 'Google OAuth not configured. Set GOOGLE_CLIENT_ID and GOOGLE_CLIENT_SECRET in server/.env' });
   }
   const redirect = req.query.redirect || '/role-select';
+  const isCapacitor = req.query.capacitor === 'true';
   // Capture the origin (e.g., ngrok URL) from referer or origin header
   const origin = req.headers.origin || req.headers.referer || process.env.FRONTEND_URL || 'http://localhost:5173';
   const originUrl = new URL(origin).origin;
-  // Encode origin + redirect path in state
-  const state = JSON.stringify({ origin: originUrl, redirect });
+  // Encode origin + redirect path + capacitor flag in state
+  const state = JSON.stringify({ origin: originUrl, redirect, capacitor: isCapacitor });
   passport.authenticate('google', {
     scope: ['profile', 'email'],
     state,

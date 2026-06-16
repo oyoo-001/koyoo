@@ -121,13 +121,11 @@ export default function Home() {
       const me = await api.auth.me();
       setUser(me);
       const profiles = await api.entities.RiderProfile.filter({ user_id: me.id });
-      if (profiles.length === 0) {
-        navigate("/role-select", { replace: true });
-        return;
-      }
-      const p = profiles[0];
-      if (Number(p.discount_percent) > 0 && Number(p.rides_since_discount) >= Number(p.discount_eligible_rides)) {
-        setDiscount({ percent: Number(p.discount_percent), multiplier: 1 - Number(p.discount_percent) / 100 });
+      if (profiles.length > 0) {
+        const p = profiles[0];
+        if (Number(p.discount_percent) > 0 && Number(p.rides_since_discount) >= Number(p.discount_eligible_rides)) {
+          setDiscount({ percent: Number(p.discount_percent), multiplier: 1 - Number(p.discount_percent) / 100 });
+        }
       }
       setReady(true);
     };

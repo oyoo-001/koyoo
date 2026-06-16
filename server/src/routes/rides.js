@@ -1,7 +1,7 @@
 import { Router } from 'express';
 import pool from '../config/db.js';
 import { authenticate, authenticateSSE } from '../middleware/auth.js';
-import { generateId, isInServiceArea } from '../utils/helpers.js';
+import { generateId, isInServiceArea, getRegion } from '../utils/helpers.js';
 import { sendEmail } from '../utils/email.js';
 import { autoRestrictUser } from './users.js';
 
@@ -48,19 +48,20 @@ router.post('/', authenticate, async (req, res) => {
     }
 
     const id = generateId();
+    const pickupRegion = getRegion(pickupLat, pickupLng);
     const [user] = await pool.query('SELECT full_name, email FROM users WHERE id = ?', [req.user.id]);
 
     await pool.query(
       `INSERT INTO rides (id, rider_id, rider_name, rider_email, pickup_address, pickup_lat, pickup_lng,
         destination_address, destination_lat, destination_lng, estimated_fare, distance_km, duration_min,
-        vehicle_type, payment_method, surge_multiplier, payment_status, paystack_reference)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+        vehicle_type, payment_method, surge_multiplier, payment_status, paystack_reference, pickup_region)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
       [id, req.user.id, user[0]?.full_name || 'Rider', user[0]?.email,
        pickup_address, pickup_lat, pickup_lng,
        destination_address, destination_lat, destination_lng,
        estimated_fare, distance_km, duration_min,
        vehicle_type || 'standard', payment_method || 'cash', surge_multiplier || 1.0,
-       payment_status || 'pending', paystack_reference || null]
+       payment_status || 'pending', paystack_reference || null, pickupRegion]
     );
 
     const [ride] = await pool.query('SELECT * FROM rides WHERE id = ?', [id]);

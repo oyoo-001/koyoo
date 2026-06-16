@@ -83,6 +83,9 @@ app.get("/api/health", (req, res) => {
   res.json({ status: "ok", timestamp: new Date().toISOString() });
 });
 
+// Serve uploaded files
+app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
+
 // In production, serve the built frontend
 if (process.env.NODE_ENV === "production") {
   const distPath = path.join(__dirname, "..", "dist");

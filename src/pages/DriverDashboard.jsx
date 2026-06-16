@@ -15,6 +15,16 @@ import { Textarea } from "@/components/ui/textarea";
 import { motion, AnimatePresence } from "framer-motion";
 import DriverOnboarding from "@/pages/DriverOnboarding";
 
+function getRegion(lat, lng) {
+  const inNairobi = lat >= -1.45 && lat <= -1.1 && lng >= 36.6 && lng <= 37.1;
+  const inMuranga = lat >= -0.9 && lat <= -0.4 && lng >= 36.8 && lng <= 37.5;
+  const inKirinyaga = lat >= -0.6 && lat <= -0.3 && lng >= 37.1 && lng <= 37.6;
+  if (inNairobi) return 'nairobi';
+  if (inMuranga) return 'muranga';
+  if (inKirinyaga) return 'kirinyaga';
+  return 'other';
+}
+
 export default function DriverDashboard() {
   const { toast } = useToast();
   const [user, setUser] = useState(null);
@@ -81,17 +91,22 @@ export default function DriverDashboard() {
           return;
         }
         setCurrentRide(null);
-        // Fetch pending rides matching vehicle type
+        // Fetch pending rides matching vehicle type, then filter by region
         const vehicleType = driverProfile?.vehicle_type || "standard";
-        const requested = await api.entities.Ride.filter({ status: "requested", vehicle_type: vehicleType }, "-created_at", 10);
+        const requested = await api.entities.Ride.filter({ status: "requested", vehicle_type: vehicleType }, "-created_at", 20);
         if (!mounted) return;
-        setPendingRides(requested);
+        // Filter by region if driver location available
+        const driverRegion = driverPos ? getRegion(driverPos.lat, driverPos.lng) : null;
+        const nearby = driverRegion
+          ? requested.filter(r => r.pickup_region === driverRegion)
+          : requested;
+        setPendingRides(nearby.slice(0, 10));
       } catch {}
     };
     poll();
     const interval = setInterval(poll, 4000);
     return () => { mounted = false; clearInterval(interval); };
-  }, [user, isOnline, driverProfile]);
+  }, [user, isOnline, driverProfile, driverPos]);
 
   // Voice call
   const voiceCall = useVoiceCall({
@@ -163,6 +178,13 @@ export default function DriverDashboard() {
 
   const declineRide = (ride) => {
     setPendingRides((prev) => prev.filter((r) => r.id !== ride.id));
+  };
+
+  const cancelRide = async (rideId) => {
+    if (!currentRide) return;
+    await api.entities.Ride.update(rideId, { status: "cancelled" });
+    setCurrentRide(null);
+    toast({ title: "Ride cancelled", description: "You can go back online for new requests" });
   };
 
   const startTrip = async () => {
@@ -385,10 +407,20 @@ export default function DriverDashboard() {
               )}
 
               {currentRide.status === "accepted" ? (
-                <Button onClick={startTrip} className="w-full h-12 rounded-2xl font-semibold gap-2">
-                  <Play size={18} />
-                  I've Arrived — Alert Rider
-                </Button>
+                <div className="space-y-2">
+                  <Button onClick={startTrip} className="w-full h-12 rounded-2xl font-semibold gap-2">
+                    <Play size={18} />
+                    I've Arrived — Alert Rider
+                  </Button>
+                  <Button
+                    onClick={() => cancelRide(currentRide.id)}
+                    variant="destructive"
+                    className="w-full h-11 rounded-xl gap-2 border-destructive text-destructive hover:bg-destructive/10"
+                  >
+                    <X size={16} />
+                    Cancel Ride
+                  </Button>
+                </div>
               ) : (
                 <Button onClick={completeTrip} className="w-full h-12 rounded-2xl font-semibold gap-2">
                   <Flag size={18} />

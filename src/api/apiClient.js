@@ -1,5 +1,22 @@
 const API_BASE_URL = '/api';
 
+function isCapacitor() {
+  return typeof window !== 'undefined' && window.Capacitor && window.Capacitor.isNativePlatform();
+}
+
+async function openGoogleAuth(url) {
+  if (isCapacitor()) {
+    try {
+      const { Browser } = await import('@capacitor/browser');
+      await Browser.open({ url, presentationStyle: 'popover' });
+    } catch (e) {
+      window.location.href = url;
+    }
+  } else {
+    window.location.href = url;
+  }
+}
+
 class ApiClient {
   constructor() {
     this.token = null;
@@ -97,7 +114,9 @@ class ApiClient {
 
     loginWithProvider: async (provider, redirectUrl) => {
       if (provider === 'google') {
-        window.location.href = `/api/auth/google?redirect=${encodeURIComponent(redirectUrl)}`;
+        const capacitor = isCapacitor();
+        const authUrl = `/api/auth/google?redirect=${encodeURIComponent(redirectUrl)}${capacitor ? '&capacitor=true' : ''}`;
+        await openGoogleAuth(authUrl);
       } else {
         window.location.href = `${API_BASE_URL}/auth/${provider}?redirect=${encodeURIComponent(redirectUrl)}`;
       }

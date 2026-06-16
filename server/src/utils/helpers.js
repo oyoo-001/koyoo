@@ -60,3 +60,14 @@ export const isInServiceArea = (lat, lng) => {
 
   return inNairobi || inMuranga || inKirinyaga || onMainRoad;
 };
+
+export const getRegion = (lat, lng) => {
+  const inNairobi = lat >= -1.45 && lat <= -1.1 && lng >= 36.6 && lng <= 37.1;
+  const inMuranga = lat >= -0.9 && lat <= -0.4 && lng >= 36.8 && lng <= 37.5;
+  const inKirinyaga = lat >= -0.6 && lat <= -0.3 && lng >= 37.1 && lng <= 37.6;
+
+  if (inNairobi) return 'nairobi';
+  if (inMuranga) return 'muranga';
+  if (inKirinyaga) return 'kirinyaga';
+  return 'other';
+};

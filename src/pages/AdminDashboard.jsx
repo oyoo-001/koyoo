@@ -3,11 +3,14 @@ import { api } from "@/api/apiClient";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Calendar } from "@/components/ui/calendar";
 import { useToast } from "@/components/ui/use-toast";
 import KoyooLogo from "@/components/koyoo/KoyooLogo";
 import RideStatusBadge from "@/components/koyoo/RideStatusBadge";
 import RiderInfoModal from "@/components/koyoo/RiderInfoModal";
 import ModeSwitcher from "@/components/koyoo/ModeSwitcher";
+import { format } from "date-fns";
 
 import { XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid, AreaChart, Area } from "recharts";
 import ConfirmDeleteDialog from "@/components/ui/confirm-dialog";
@@ -16,9 +19,9 @@ import moment from "moment";
 import {
   Car, Users, Plus, Trash2, CheckCircle, LogOut, RefreshCw, Copy, Eye, EyeOff,
   FileCheck, ShieldCheck, ExternalLink, FileText, Loader2, X,
-  Megaphone, Save, Calendar, Wallet, Banknote, Landmark, TrendingUp, DollarSign,
+  Megaphone, Save, CalendarIcon, Wallet, Banknote, Landmark, TrendingUp, DollarSign,
   Activity, Clock, Star, ChevronLeft, ChevronRight, LayoutDashboard, FileSearch,
-  Layers
+  Layers, Upload
 } from "lucide-react";
 
 function generatePassword() {
@@ -63,6 +66,9 @@ export default function AdminDashboard() {
   const [editingAd, setEditingAd] = useState(null);
   const [savingAd, setSavingAd] = useState(false);
   const [deletingAd, setDeletingAd] = useState(null);
+  const [uploadingImage, setUploadingImage] = useState(false);
+  const [uploadStatus, setUploadStatus] = useState("idle"); // idle | uploading | success | error
+  const [localPreview, setLocalPreview] = useState(null);
   const [adForm, setAdForm] = useState({
     title: "", description: "", image_url: "", link_url: "",
     is_active: true, position: "banner", priority: 0, starts_at: "", ends_at: "",
@@ -168,6 +174,24 @@ export default function AdminDashboard() {
   const totalRevenue = completedRides.reduce((s, r) => s + Number(r.final_fare || r.estimated_fare || 0), 0);
   const chartData = buildChartData(rides);
   const pendingWithdrawals = withdrawals.filter((w) => w.status === "pending");
+
+  const handleImageUpload = async (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setUploadingImage(true);
+    setUploadStatus("uploading");
+    setLocalPreview(URL.createObjectURL(file));
+    try {
+      const result = await api.integrations.UploadFile(file);
+      setAdForm({ ...adForm, image_url: result.file_url });
+      setUploadStatus("success");
+    } catch {
+      setUploadStatus("error");
+      setLocalPreview(null);
+      toast({ title: "Upload failed", variant: "destructive" });
+    }
+    setUploadingImage(false);
+  };
 
   const fadeUp = { initial: { y: 20, opacity: 0 }, animate: { y: 0, opacity: 1 }, transition: { duration: 0.4 } };
 
@@ -798,11 +822,70 @@ export default function AdminDashboard() {
                     <Input placeholder="Short description of the ad" value={adForm.description} onChange={(e) => setAdForm({ ...adForm, description: e.target.value })} className="h-10 bg-secondary border-0" />
                   </div>
                   <div className="col-span-2">
-                    <label className="text-xs text-muted-foreground mb-1 block">Image URL</label>
-                    <Input placeholder="https://example.com/ad-image.jpg" value={adForm.image_url} onChange={(e) => setAdForm({ ...adForm, image_url: e.target.value })} className="h-10 bg-secondary border-0" />
-                    {adForm.image_url && (
-                      <img src={adForm.image_url} alt="preview" className="mt-2 h-20 w-full object-cover rounded-xl border border-border" onError={(e) => { e.target.style.display = "none" }} />
-                    )}
+                    <label className="text-xs text-muted-foreground mb-1 block">Image</label>
+                    <div className="flex gap-2">
+                      <Input
+                        placeholder="https://example.com/ad-image.jpg"
+                        value={adForm.image_url}
+                        onChange={(e) => {
+                          setAdForm({ ...adForm, image_url: e.target.value });
+                          setUploadStatus(e.target.value ? "success" : "idle");
+                        }}
+                        className="h-10 bg-secondary border-0 flex-1"
+                      />
+                      <label className={`h-10 rounded-xl border flex items-center gap-2 px-3 text-xs font-medium cursor-pointer transition-colors shrink-0 ${
+                        uploadStatus === "uploading"
+                          ? "bg-primary/10 border-primary/30 text-primary cursor-not-allowed"
+                          : "bg-secondary border-border hover:bg-secondary/80"
+                      }`}>
+                        {uploadStatus === "uploading" ? (
+                          <Loader2 size={14} className="animate-spin" />
+                        ) : (
+                          <Upload size={14} />
+                        )}
+                        <span className="hidden sm:inline">
+                          {uploadStatus === "uploading" ? "Uploading..." : "Browse"}
+                        </span>
+                        <input type="file" accept="image/*" className="hidden" onChange={handleImageUpload} disabled={uploadStatus === "uploading"} />
+                      </label>
+                    </div>
+                    <div className="relative mt-2">
+                      {localPreview || adForm.image_url ? (
+                        <div className="relative h-24 w-full rounded-xl border border-border overflow-hidden bg-secondary/50">
+                          <img
+                            src={localPreview || adForm.image_url}
+                            alt="preview"
+                            className="w-full h-full object-cover"
+                            onError={(e) => { e.target.style.display = "none" }}
+                          />
+                          {uploadStatus === "uploading" && (
+                            <div className="absolute inset-0 bg-background/60 flex items-center justify-center">
+                              <div className="flex flex-col items-center gap-1">
+                                <Loader2 size={20} className="animate-spin text-primary" />
+                                <span className="text-[10px] font-medium text-muted-foreground">Uploading...</span>
+                              </div>
+                            </div>
+                          )}
+                          {uploadStatus === "success" && (
+                            <div className="absolute top-1 right-1 bg-green-500 text-white text-[10px] font-semibold px-1.5 py-0.5 rounded-full flex items-center gap-0.5 shadow">
+                              <CheckCircle size={10} /> Uploaded
+                            </div>
+                          )}
+                          {uploadStatus === "error" && (
+                            <div className="absolute top-1 right-1 bg-destructive text-destructive-foreground text-[10px] font-semibold px-1.5 py-0.5 rounded-full flex items-center gap-0.5 shadow">
+                              <X size={10} /> Failed
+                            </div>
+                          )}
+                        </div>
+                      ) : (
+                        <div className="h-24 w-full rounded-xl border border-dashed border-border bg-secondary/30 flex items-center justify-center">
+                          <div className="flex flex-col items-center gap-1 text-muted-foreground">
+                            <Upload size={16} />
+                            <span className="text-[10px]">No image selected</span>
+                          </div>
+                        </div>
+                      )}
+                    </div>
                   </div>
                   <Input placeholder="Link URL (optional)" value={adForm.link_url} onChange={(e) => setAdForm({ ...adForm, link_url: e.target.value })} className="h-10 bg-secondary border-0" />
                   <div className="flex items-center gap-3">
@@ -818,8 +901,36 @@ export default function AdminDashboard() {
                     </SelectContent>
                   </Select>
                   <Input placeholder="Priority (higher = first)" type="number" value={adForm.priority} onChange={(e) => setAdForm({ ...adForm, priority: Number(e.target.value) })} className="h-10 bg-secondary border-0" />
-                  <Input placeholder="Start date YYYY-MM-DD" value={adForm.starts_at} onChange={(e) => setAdForm({ ...adForm, starts_at: e.target.value })} className="h-10 bg-secondary border-0" />
-                  <Input placeholder="End date YYYY-MM-DD" value={adForm.ends_at} onChange={(e) => setAdForm({ ...adForm, ends_at: e.target.value })} className="h-10 bg-secondary border-0" />
+                  <Popover>
+                    <PopoverTrigger asChild>
+                      <Button variant="outline" className={`h-10 bg-secondary border-0 justify-start text-left font-normal ${!adForm.starts_at ? "text-muted-foreground" : ""}`}>
+                        <CalendarIcon size={14} className="mr-2" />
+                        {adForm.starts_at ? format(new Date(adForm.starts_at), "PPP") : "Start date"}
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-auto p-0" align="start">
+                      <Calendar
+                        mode="single"
+                        selected={adForm.starts_at ? new Date(adForm.starts_at) : undefined}
+                        onSelect={(d) => setAdForm({ ...adForm, starts_at: d ? format(d, "yyyy-MM-dd") : "" })}
+                      />
+                    </PopoverContent>
+                  </Popover>
+                  <Popover>
+                    <PopoverTrigger asChild>
+                      <Button variant="outline" className={`h-10 bg-secondary border-0 justify-start text-left font-normal ${!adForm.ends_at ? "text-muted-foreground" : ""}`}>
+                        <CalendarIcon size={14} className="mr-2" />
+                        {adForm.ends_at ? format(new Date(adForm.ends_at), "PPP") : "End date"}
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-auto p-0" align="start">
+                      <Calendar
+                        mode="single"
+                        selected={adForm.ends_at ? new Date(adForm.ends_at) : undefined}
+                        onSelect={(d) => setAdForm({ ...adForm, ends_at: d ? format(d, "yyyy-MM-dd") : "" })}
+                      />
+                    </PopoverContent>
+                  </Popover>
                 </div>
                 <div className="flex gap-2">
                   <Button className="flex-1 h-10 rounded-xl gap-2" disabled={savingAd || !adForm.title}
@@ -879,7 +990,7 @@ export default function AdminDashboard() {
                             </span>
                             <span className="text-[10px] text-muted-foreground capitalize">{ad.position}</span>
                             <span className="text-[10px] text-muted-foreground">Priority {ad.priority || 0}</span>
-                            {ad.starts_at && <span className="text-[10px] text-muted-foreground"><Calendar size={8} className="inline" /> {ad.starts_at.slice(0, 10)}</span>}
+                            {ad.starts_at && <span className="text-[10px] text-muted-foreground"><CalendarIcon size={8} className="inline" /> {ad.starts_at.slice(0, 10)}</span>}
                             {ad.ends_at && <span className="text-[10px] text-muted-foreground">→ {ad.ends_at.slice(0, 10)}</span>}
                           </div>
                         </div>

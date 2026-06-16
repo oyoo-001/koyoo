@@ -17,6 +17,7 @@ async function migrate() {
     `ALTER TABLE withdrawals ADD COLUMN IF NOT EXISTS admin_notes TEXT DEFAULT NULL AFTER paystack_reference`,
     `ALTER TABLE driver_profiles ADD COLUMN IF NOT EXISTS current_heading DECIMAL(5,1) DEFAULT NULL AFTER current_lng`,
     `ALTER TABLE rides ADD COLUMN IF NOT EXISTS cancelled_at TIMESTAMP NULL DEFAULT NULL AFTER completed_at`,
+    `ALTER TABLE rides ADD COLUMN IF NOT EXISTS pickup_region VARCHAR(20) DEFAULT NULL AFTER driver_vehicle_type`,
     `ALTER TABLE users ADD COLUMN IF NOT EXISTS is_restricted BOOLEAN DEFAULT FALSE AFTER avatar_url`,
     `ALTER TABLE users ADD COLUMN IF NOT EXISTS restriction_reason VARCHAR(255) DEFAULT NULL AFTER is_restricted`,
     `ALTER TABLE users ADD COLUMN IF NOT EXISTS restricted_at TIMESTAMP NULL DEFAULT NULL AFTER restriction_reason`,

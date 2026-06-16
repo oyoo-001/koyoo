@@ -7,12 +7,39 @@ import PageNotFound from './lib/PageNotFound';
 import { AuthProvider, useAuth } from '@/lib/AuthContext';
 import UserNotRegisteredError from '@/components/UserNotRegisteredError';
 import ProtectedRoute from '@/components/ProtectedRoute';
+import { useEffect } from 'react';
+import { api } from '@/api/apiClient';
 
 // Auth pages
 import Login from '@/pages/Login';
 import Register from '@/pages/Register';
 import ForgotPassword from '@/pages/ForgotPassword';
 import ResetPassword from '@/pages/ResetPassword';
+
+function DeepLinkHandler() {
+  useEffect(() => {
+    const handleDeepLink = async () => {
+      try {
+        const { App } = await import('@capacitor/app');
+        const listener = await App.addListener('appUrlOpen', (data) => {
+          const url = data.url;
+          if (url.startsWith('koyoo://oauth/callback')) {
+            const params = new URLSearchParams(url.split('?')[1]);
+            const token = params.get('access_token');
+            const redirect = params.get('redirect') || '/role-select';
+            if (token) {
+              api.setToken(token);
+              window.location.href = redirect;
+            }
+          }
+        });
+        return () => listener.remove();
+      } catch {}
+    };
+    handleDeepLink();
+  }, []);
+  return null;
+}
 
 // Public pages
 import LandingPage from '@/pages/LandingPage';
@@ -88,6 +115,7 @@ function App() {
         </Router>
         <Toaster />
         <InstallPrompt />
+        <DeepLinkHandler />
       </QueryClientProvider>
     </AuthProvider>
   )
