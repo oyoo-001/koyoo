@@ -43,8 +43,12 @@ export default function Login() {
     }
   };
 
-  const handleGoogle = () => {
-    api.auth.loginWithProvider("google", "/role-select");
+  const handleGoogle = async () => {
+    try {
+      await api.auth.loginWithProvider("google", "/role-select");
+    } catch (e) {
+      setError(e.message || "Google login failed");
+    }
   };
 
   return (

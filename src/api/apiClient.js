@@ -13,7 +13,8 @@ async function openGoogleAuth(url) {
       window.location.href = url;
     }
   } else {
-    window.location.href = url;
+    const fullUrl = `${window.location.origin}${url}`;
+    window.location.href = fullUrl;
   }
 }
 
